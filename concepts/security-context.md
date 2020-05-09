@@ -10,7 +10,7 @@ Kubernetes 提供了三种配置 Security Context 的方法：
 
 ## Container-level Security Context
 
-[Container-level Security Context](https://kubernetes.io/docs/api-reference/v1.6/#securitycontext-v1-core) 仅应用到指定的容器上，并且不会影响 Volume。比如设置容器运行在特权模式：
+[Container-level Security Context](https://kubernetes.io/docs/api-reference/v1.15/#securitycontext-v1-core) 仅应用到指定的容器上，并且不会影响 Volume。比如设置容器运行在特权模式：
 
 ```yaml
 apiVersion: v1
@@ -28,7 +28,7 @@ spec:
 
 ## Pod-level Security Context
 
-[Pod-level Security Context](https://kubernetes.io/docs/api-reference/v1.6/#podsecuritycontext-v1-core) 应用到 Pod 内所有容器，并且还会影响 Volume（包括 fsGroup 和 selinuxOptions）。
+[Pod-level Security Context](https://kubernetes.io/docs/api-reference/v1.15/#podsecuritycontext-v1-core) 应用到 Pod 内所有容器，并且还会影响 Volume（包括 fsGroup 和 selinuxOptions）。
 
 ```yaml
 apiVersion: v1
@@ -51,6 +51,13 @@ spec:
 Pod Security Policies（PSP）是集群级的 Pod 安全策略，自动为集群内的 Pod 和 Volume 设置 Security Context。
 
 使用 PSP 需要 API Server 开启 `extensions/v1beta1/podsecuritypolicy`，并且配置 `PodSecurityPolicy` admission 控制器。
+
+### API 版本对照表
+
+| Kubernetes 版本 | Extension 版本     |
+| --------------- | ------------------ |
+| v1.5-v1.15      | extensions/v1beta1 |
+| v1.10+          | policy/v1beta1     |
 
 ### 支持的控制项
 
@@ -118,7 +125,7 @@ spec:
     rule: RunAsAny
   volumes:
     - flexVolume
-  allowedFlexVolumes: 
+  allowedFlexVolumes:
     - driver: example/lvm
     - driver: example/cifs
 ```

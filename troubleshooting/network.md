@@ -21,6 +21,8 @@
 - Pod 网络路由丢失，比如
   - kubenet 要求网络中有 podCIDR 到主机 IP 地址的路由，这些路由如果没有正确配置会导致 Pod 网络通信等问题
   - 在公有云平台上，kube-controller-manager 会自动为所有 Node 配置路由，但如果配置不当（如认证授权失败、超出配额等），也有可能导致无法配置路由
+- Service NodePort 和 health probe 端口冲突
+  - 在 1.10.4 版本之前的集群中，多个不同的 Service 之间的 NodePort 和 health probe 端口有可能会有重合 （已经在 [kubernetes#64468](https://github.com/kubernetes/kubernetes/pull/64468) 修复）
 - 主机内或者云平台的安全组、防火墙或者安全策略等阻止了 Pod 网络，比如
   - 非 Kubernetes 管理的 iptables 规则禁止了 Pod 网络
   - 公有云平台的安全组禁止了 Pod 网络（注意 Pod 网络有可能与 Node 网络不在同一个网段）
@@ -165,13 +167,41 @@ spec:
     protocol: TCP
 ```
 
-（3）如果 kube-dns Pod 和 Service 都正常，那么就需要检查 kube-proxy 是否正确为 kube-dns 配置了负载均衡的 iptables 规则。具体排查方法可以参考下面的 Service 无法访问部分。
+（3）如果最近升级了 CoreDNS，并且使用了 CoreDNS 的 proxy 插件，那么需要注意 [1.5.0 以上](https://coredns.io/2019/04/06/coredns-1.5.0-release/)的版本需要将 proxy 插件替换为 forward 插件。比如：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  test.server: |
+    abc.com:53 {
+        errors
+        cache 30
+        forward . 1.2.3.4
+    }
+    my.cluster.local:53 {
+        errors
+        cache 30
+        forward . 2.3.4.5
+    }
+    azurestack.local:53 {
+        forward . tls://1.1.1.1 tls://1.0.0.1 {
+          tls_servername cloudflare-dns.com
+          health_check 5s
+        }
+    }
+```
+
+（4）如果 kube-dns Pod 和 Service 都正常，那么就需要检查 kube-proxy 是否正确为 kube-dns 配置了负载均衡的 iptables 规则。具体排查方法可以参考下面的 Service 无法访问部分。
 
 ## DNS解析缓慢
 
-由于内核的一个 [BUG](https://www.weave.works/blog/racy-conntrack-and-dns-lookup-timeouts)，连接跟踪模块会发生竞争，导致　DNS　解析缓慢。
+由于内核的一个 [BUG](https://www.weave.works/blog/racy-conntrack-and-dns-lookup-timeouts)，连接跟踪模块会发生竞争，导致　DNS　解析缓慢。社区跟踪 Issue 为 <https://github.com/kubernetes/kubernetes/issues/56903>。
 
-临时[解决方法](https://github.com/kubernetes/kubernetes/issues/56903)：为容器配置 `options single-request-reopen`
+临时[解决方法](https://github.com/kubernetes/kubernetes/issues/56903)：为容器配置 `options single-request-reopen`，避免相同五元组的并发 DNS 请求：
 
 ```yaml
         lifecycle:
@@ -183,17 +213,35 @@ spec:
               - "/bin/echo 'options single-request-reopen' >> /etc/resolv.conf"
 ```
 
+或者为 Pod 配置 dnsConfig：
+
+```yaml
+template:
+  spec:
+    dnsConfig:
+      options:
+        - name: single-request-reopen
+```
+
+> 注意：`single-request-reopen` 选项对 Alpine 无效，请使用 Debian 等其他的基础镜像，或者参考下面的修复方法。
+
 修复方法：升级内核并保证包含以下两个补丁
 
-1. ["netfilter: nf_conntrack: resolve clash for matching conntracks"](http://patchwork.ozlabs.org/patch/937963/) fixes the 1st race (accepted).
-2. ["netfilter: nf_nat: return the same reply tuple for matching CTs"](http://patchwork.ozlabs.org/patch/952939/) fixes the 2nd race (waiting for a review).
+1. [netfilter: nf_nat: skip nat clash resolution for same-origin entries](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4e35c1cb9460240e983a01745b5f29fe3a4d8e39) (included since kernel v5.0)
+2. [netfilter: nf_conntrack: resolve clash for matching conntracks](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=ed07d9a021df6da53456663a76999189badc432a) (included since kernel v4.19)
+
+> 对于 Azure 来说，这个问题已经在 [v4.15.0-1030.31/v4.18.0-1006.6](https://bugs.launchpad.net/ubuntu/+source/linux-azure/+bug/1795493) 中修复了（[patch1](https://git.launchpad.net/~canonical-kernel/ubuntu/+source/linux-azure/commit/?id=6f4fe585e573d7edd4122e45f58ca3da5b478265), [patch2](https://git.launchpad.net/~canonical-kernel/ubuntu/+source/linux-azure/commit/?id=4c7917876cf9560492d6bc2732365cbbfecfe623)）。
 
 其他可能的原因和修复方法还有：
 
-* Kube-dns 和 CoreDNS 同时存在时也会有问题，只保留一个即可。
-* kube-dns 或者 CoreDNS 的资源限制太小时会导致 DNS 解析缓慢，这时候需要增大资源限制。
+- Kube-dns 和 CoreDNS 同时存在时也会有问题，只保留一个即可。
+- kube-dns 或者 CoreDNS 的资源限制太小时会导致 DNS 解析缓慢，这时候需要增大资源限制。
+- 配置 DNS 选项 `use-vc`，强制使用 TCP 协议发送 DNS 查询。
+- 在每个节点上运行一个 DNS 缓存服务，然后把所有容器的 DNS nameserver 都指向该缓存。
 
-更多 DNS 配置的方法可以参考 [Customizing DNS Service](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)。
+推荐部署 Nodelocal DNS Cache 扩展来解决这个问题，同时也提升 DNS 解析的性能。 Nodelocal DNS Cache 的部署步骤请参考 <https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dns/nodelocaldns>。
+
+> 更多 DNS 配置的方法可以参考 [Customizing DNS Service](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)。
 
 ## Service 无法访问
 

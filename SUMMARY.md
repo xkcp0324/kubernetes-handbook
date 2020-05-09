@@ -1,6 +1,8 @@
 # Summary
 
-## 基础入门
+* [序言](README.md)
+
+## 基础入门 <a id="introduction"></a>
 
 - [Kubernetes 简介](introduction/index.md)
 - [Kubernetes 基本概念](introduction/concepts.md)
@@ -8,12 +10,12 @@
 - [Kubernetes 201](introduction/201.md)
 - [Kubernetes 集群](introduction/cluster.md)
 
-## 核心原理
+## 核心原理 <a id="concepts"></a>
 
 - [核心原理](architecture/index.md)
 - [架构原理](architecture/architecture.md)
 - [设计理念](architecture/concepts.md)
-- [核心组件](components/index.md)
+- [核心组件](components/components.md)
   - [etcd](components/etcd.md)
   - [kube-apiserver](components/apiserver.md)
   - [kube-scheduler](components/scheduler.md)
@@ -25,7 +27,7 @@
   - [kubeadm](components/kubeadm.md)
   - [hyperkube](components/hyperkube.md)
   - [kubectl](components/kubectl.md)
-- [资源对象](concepts/index.md)
+- [资源对象](concepts/objects.md)
   - [Autoscaling](concepts/autoscaling.md)
   - [ConfigMap](concepts/configmap.md)
   - [CronJob](concepts/cronjob.md)
@@ -50,7 +52,7 @@
   - [StatefulSet](concepts/statefulset.md)
   - [Volume](concepts/volume.md)
 
-## 部署配置
+## 部署配置 <a id="setup"></a>
 
 - [部署指南](deploy/index.md)
 - [kubectl 安装](deploy/kubectl.md)
@@ -66,7 +68,7 @@
   - [Windows](deploy/windows.md)
   - [LinuxKit](deploy/k8s-linuxkit.md)
   - [kubeasz](https://github.com/gjmzj/kubeasz)
-- [附加组件](addons/index.md)
+- [附加组件](addons/addon-list.md)
   - [Addon-manager](addons/addon-manager.md)
   - [DNS](components/kube-dns.md)
   - [Dashboard](addons/dashboard.md)
@@ -76,7 +78,7 @@
   - [GPU](practice/gpu.md)
   - [Cluster Autoscaler](addons/cluster-autoscaler.md)
   - [ip-masq-agent](addons/ip-masq-agent.md)
-- [Kubernetes-The-Hard-Way](deploy/kubernetes-the-hard-way/index.md)
+- [Kubernetes-The-Hard-Way](deploy/kubernetes-the-hard-way/k8s-hard-way.md)
   - [准备部署环境](deploy/kubernetes-the-hard-way/01-prerequisites.md)
   - [安装必要工具](deploy/kubernetes-the-hard-way/02-client-tools.md)
   - [创建计算资源](deploy/kubernetes-the-hard-way/03-compute-resources.md)
@@ -92,7 +94,7 @@
   - [烟雾测试](deploy/kubernetes-the-hard-way/13-smoke-test.md)
   - [删除集群](deploy/kubernetes-the-hard-way/14-cleanup.md)
 
-## 插件扩展
+## 插件扩展 <a id="extension"></a>
 
 - [API 扩展](plugins/api.md)
   - [Aggregation](plugins/aggregation.md)
@@ -103,20 +105,20 @@
   - [准入控制](plugins/admission.md)
 - [Scheduler 扩展](plugins/scheduler.md)
 - [网络插件](network/network.md)
-  - [CNI](network/cni/index.md)
-  - [Flannel](network/flannel/index.md)
-  - [Calico](network/calico/index.md)
-  - [Weave](network/weave/index.md)
-  - [Cilium](network/cilium/index.md)
+  - [CNI](network/cni/cni.md)
+  - [Flannel](network/flannel/flannel.md)
+  - [Calico](network/calico/calico.md)
+  - [Weave](network/weave/weave.md)
+  - [Cilium](network/cilium/cilium.md)
   - [OVN](network/ovn-kubernetes.md)
-  - [Contiv](network/contiv/index.md)
-  - [SR-IOV](network/sriov/index.md)
-  - [Romana](network/romana/index.md)
-  - [OpenContrail](network/opencontrail/index.md)
-  - [Kuryr](network/kuryr/index.md)
+  - [Contiv](network/contiv/contiv.md)
+  - [SR-IOV](network/sriov/sriov.md)
+  - [Romana](network/romana/romana.md)
+  - [OpenContrail](network/opencontrail/opencontrail.md)
+  - [Kuryr](network/kuryr/kuryr.md)
 - [运行时插件 CRI](plugins/CRI.md)
   - [CRI-tools](plugins/cri-tools.md)
-  - [Frakti](deploy/frakti/index.md)
+  - [Frakti](deploy/frakti/frakti.md)
 - [存储插件](plugins/volume.md)
   - [容器存储接口 CSI](plugins/csi.md)
   - [FlexVolume](plugins/flex-volume.md)
@@ -130,7 +132,7 @@
 - [Cloud Provider 扩展](plugins/cloud-provider.md)
 - [Device 插件](plugins/device.md)
 
-## 服务治理
+## 服务治理 <a id="apps"></a>
 
 - [服务治理](apps/index.md)
   - [一般准则](apps/patterns.md)
@@ -157,24 +159,28 @@
   - [Argo](apps/argo.md)
   - [Flux GitOps](apps/flux.md)
 
-## 实践案例
+## 实践案例 <a id="practice"></a>
 
-- [实践案例](practice/index.md)
-  - [高可用](practice/ha.md)
-  - [调试](practice/debugging.md)
-  - [端口映射](practice/portmap.md)
-  - [端口转发](practice/portforward.md)
-  - [GPU](practice/gpu.md)
-  - [HugePage](practice/hugepage.md)
-  - [安全](practice/security.md)
-  - [审计](practice/audit.md)
-  - [大规模集群](practice/big-cluster.md)
-- [大数据与机器学习](machine-learning/index.md)
+- [实践概览](practice/index.md)
+- [资源控制](practice/resource-management.md)
+- [高可用](practice/ha.md)
+- [调试](practice/debugging.md)
+- [端口映射](practice/portmap.md)
+- [端口转发](practice/portforward.md)
+- [用户管理](practice/user-management.md)
+- [GPU](practice/gpu.md)
+- [HugePage](practice/hugepage.md)
+- [安全](practice/security.md)
+- [审计](practice/audit.md)
+- [备份恢复](practice/backup.md)
+- [证书轮换](practice/certificate-rotation.md)
+- [大规模集群](practice/big-cluster.md)
+- [大数据与机器学习](machine-learning/introduction.md)
   - [Spark](machine-learning/spark.md)
   - [Tensorflow](machine-learning/tensorflow.md)
-- [Serverless](serverless/index.md)
+- [Serverless](serverless/serverless.md)
 
-## 排错指南
+## 排错指南 <a id="troubleshooting"></a>
 
 - [排错概览](troubleshooting/index.md)
 - [集群排错](troubleshooting/cluster.md)
@@ -188,13 +194,13 @@
   - [Azure](troubleshooting/azure.md)
 - [排错工具](troubleshooting/tools.md)
 
-## 社区贡献
+## 社区贡献 <a id="community"></a>
 
 - [开发指南](devel/index.md)
 - [单元测试和集成测试](devel/testing.md)
 - [社区贡献](devel/contribute.md)
 
-## 附录
+## 附录 <a id="appendix"></a>
 
 - [生态圈](appendix/ecosystem.md)
 - [学习资源](appendix/tutorial.md)

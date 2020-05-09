@@ -22,7 +22,7 @@ Pod 的特征
 
 ## Pod 定义
 
-通过 [yaml 或 json 描述 Pod](https://v1-9.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.9/#pod-v1-core) 和其内容器的运行环境以及期望状态，比如一个最简单的 nginx pod 可以定义为
+通过 [yaml 或 json 描述 Pod](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#pod-v1-core) 和其内容器的运行环境以及期望状态，比如一个最简单的 nginx pod 可以定义为
 
 ```yaml
 apiVersion: v1
@@ -62,11 +62,11 @@ spec:
 
 Kubernetes 以 `PodStatus.Phase` 抽象 Pod 的状态（但并不直接反映所有容器的状态）。可能的 Phase 包括
 
-- Pending: Pod 已经在 apiserver 中创建，但还没有调度到 Node 上面
-- Running: Pod 已经调度到 Node 上面，所有容器都已经创建，并且至少有一个容器还在运行或者正在启动
-- Succeeded: Pod 调度到 Node 上面后成功运行结束，并且不会重启
-- Failed: Pod 调度到 Node 上面后至少有一个容器运行失败（即退出码不为 0 或者被系统终止）
-- Unknonwn: 状态未知，通常是由于 apiserver 无法与 kubelet 通信导致
+- Pending: API Server已经创建该Pod，但一个或多个容器还没有被创建，包括通过网络下载镜像的过程。
+- Running: Pod中的所有容器都已经被创建且已经调度到 Node 上面，但至少有一个容器还在运行或者正在启动。
+- Succeeded: Pod 调度到 Node 上面后均成功运行结束，并且不会重启。
+- Failed: Pod中的所有容器都被终止了，但至少有一个容器退出失败（即退出码不为 0 或者被系统终止）。
+- Unknonwn: 状态未知，因为一些原因Pod无法被正常获取，通常是由于 apiserver 无法与 kubelet 通信导致。
 
 可以用 kubectl 命令查询 Pod Phase：
 
@@ -159,7 +159,9 @@ CLIENT_ID=$(az ad sp show --id http://$SERVICE_PRINCIPAL_NAME --query appId --ou
 kubectl create secret docker-registry acr-auth --docker-server $ACR_LOGIN_SERVER --docker-username $CLIENT_ID --docker-password $SP_PASSWD --docker-email local@local.domain
 ```
 
-容器中引用该 secret：
+在引用 docker registry secret 时，有两种可选的方法：
+
+第一种是直接在 Pod 描述文件中引用该 secret：
 
 ```yaml
 apiVersion: v1
@@ -174,13 +176,33 @@ spec:
     - name: acr-auth
 ```
 
+第二种是把 secret 添加到 service account 中，再通过 service account 引用（一般是某个 namespace 的 default service account）：
+
+```sh
+$ kubectl get secrets myregistrykey
+$ kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "myregistrykey"}]}'
+$ kubectl get serviceaccounts default -o yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: 2015-08-07T22:02:39Z
+  name: default
+  namespace: default
+  selfLink: /api/v1/namespaces/default/serviceaccounts/default
+  uid: 052fb0f4-3d50-11e5-b066-42010af0d7b6
+secrets:
+- name: default-token-uudge
+imagePullSecrets:
+- name: myregistrykey
+```
+
 ## RestartPolicy
 
 支持三种 RestartPolicy
 
-- Always：只要退出就重启
-- OnFailure：失败退出（exit code 不等于 0）时重启
-- Never：只要退出就不再重启
+- Always：当容器失效时，由Kubelet自动重启该容器。RestartPolicy的默认值。
+- OnFailure：当容器终止运行且退出码不为0时由Kubelet重启。
+- Never：无论何种情况下，Kubelet都不会重启该容器。
 
 注意，这里的重启是指在 Pod 所在 Node 上面本地重启，并不会调度到其他 Node 上去。
 
@@ -280,9 +302,9 @@ KUBERNETES_PORT_443_TCP_PORT=443
 
 支持三种 ImagePullPolicy
 
-- Always：不管镜像是否存在都会进行一次拉取
-- Never：不管镜像是否存在都不会进行拉取
-- IfNotPresent：只有镜像不存在时，才会进行镜像拉取
+- Always：不管本地镜像是否存在都会去仓库进行一次镜像拉取。校验如果镜像有变化则会覆盖本地镜像，否则不会覆盖。
+- Never：只是用本地镜像，不会去仓库拉取镜像，如果本地镜像不存在则Pod运行失败。
+- IfNotPresent：只有本地镜像不存在时，才会去仓库拉取镜像。ImagePullPolicy的默认值。
 
 注意：
 
@@ -499,8 +521,8 @@ spec:
 
 为了确保容器在部署后确实处在正常运行状态，Kubernetes 提供了两种探针（Probe）来探测容器的状态：
 
-- LivenessProbe：探测应用是否处于健康状态，如果不健康则删除并重新创建容器
-- ReadinessProbe：探测应用是否启动完成并且处于正常服务状态，如果不正常则不会接收来自 Kubernetes Service 的流量
+- LivenessProbe：探测应用是否处于健康状态，如果不健康则删除并重新创建容器。
+- ReadinessProbe：探测应用是否启动完成并且处于正常服务状态，如果不正常则不会接收来自 Kubernetes Service 的流量，即将该Pod从Service的endpoint中移除。
 
 Kubernetes 支持三种方式来执行探针：
 

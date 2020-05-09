@@ -22,7 +22,7 @@ ABAC（Attribute Based Access Control）本来是不错的概念，但是在 Kub
 
 ## 基础概念
 
-需要理解 RBAC 一些基础的概念和思路，RBAC 是让用户能够访问 [Kubernetes API 资源](https://kubernetes.io/docs/api-reference/v1.6/) 的授权方式。
+需要理解 RBAC 一些基础的概念和思路，RBAC 是让用户能够访问 [Kubernetes API 资源](https://kubernetes.io/docs/api-reference/v1.15/) 的授权方式。
 
 ![RBAC 架构图 1](images/rbac1.png)
 
@@ -214,6 +214,18 @@ kubectl create clusterrolebinding permissive-binding \
   --user=kubelet \
   --group=system:serviceaccounts
 ```
+
+## 推荐配置
+
+- 针对 namespace 内资源的访问权限，使用 Role 和 RoleBinding
+- 针对集群级别的资源或者所有 namespace 的特定资源访问，使用 ClustetRole 和 ClusterRoleBinding
+- 针对多个有限 namespace 的特定资源访问，使用 ClusterRole 和 RoleBinding
+
+## 开源工具
+
+- [liggitt/audit2rbac](https://github.com/liggitt/audit2rbac)
+- [reactiveops/rbac-manager](https://github.com/reactiveops/rbac-manager)
+- [jtblin/kube2iam](https://github.com/jtblin/kube2iam)
 
 ## 参考文档
 

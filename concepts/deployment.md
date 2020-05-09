@@ -9,9 +9,9 @@ Deployment 为 Pod 和 ReplicaSet 提供了一个声明式定义 (declarative) �
 | Kubernetes 版本 |   Deployment 版本 |
 | ------------- | ------------------- |
 |   v1.5-v1.6   | extensions/v1beta1  |
-|     v1.7      |   apps/v1beta1      |
-|     v1.8      |   apps/v1beta2      |
-|     v1.9      |      apps/v1        |
+|     v1.7-v1.15     |   apps/v1beta1      |
+|     v1.8-v1.15     |   apps/v1beta2      |
+|     v1.9+     |      apps/v1        |
 
 比如一个简单的 nginx 应用可以定义为
 
@@ -58,7 +58,7 @@ kubectl set image deployment/nginx-deployment nginx=nginx:1.9.1
 kubectl rollout undo deployment/nginx-deployment
 ```
 
-Deployment 的 ** 典型应用场景 ** 包括：
+Deployment 的 **典型应用场景** 包括：
 
 - 定义 Deployment 来创建 Pod 和 ReplicaSet
 - 滚动升级和回滚应用
@@ -199,7 +199,7 @@ Deployment 可以保证在升级时只有一定数量的 Pod 是 down 的。默�
 
 Deployment 同时也可以确保只创建出超过期望数量的一定数量的 Pod。默认的，它会确保最多比期望的 Pod 数量多一个的 Pod 是 up 的（最多 1 个 surge）。
 
-** 在未来的 Kuberentes 版本中，将从 1-1 变成 25%-25%）。**
+**在未来的 Kubernetes 版本中，将从 1-1 变成 25%-25%）.**
 
 例如，如果你自己看下上面的 Deployment，你会发现，开始创建一个新的 Pod，然后删除一些旧的 Pod 再创建一个新的。当新的 Pod 创建出来之前不会杀掉旧的 Pod。这样能够确保可用的 Pod 数量至少有 2 个，Pod 的总数最多 4 个。
 
@@ -490,7 +490,7 @@ $ kubectl rollout pause deployment/nginx-deployment
 deployment "nginx-deployment" paused
 ```
 
-然后更新 Deplyment 中的镜像：
+然后更新 Deployment 中的镜像：
 
 ```sh
 $ kubectl set image deploy/nginx nginx=nginx:1.9.1
@@ -593,7 +593,7 @@ $ echo $?
 - 范围限制
 - 程序运行时配置错误
 
-探测这种情况的一种方式是，在你的 Deployment spec 中指定 [`spec.progressDeadlineSeconds`](https://github.com/kubernetes/kubernetes.github.io/blob/master/docs/concepts/workloads/controllers/deployment.md#progress-deadline-seconds)。`spec.progressDeadlineSeconds` 表示 Deployment controller 等待多少秒才能确定（通过 Deployment status）Deployment 进程是卡住的。
+探测这种情况的一种方式是，在你的 Deployment spec 中指定 [`spec.progressDeadlineSeconds`](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds)。`spec.progressDeadlineSeconds` 表示 Deployment controller 等待多少秒才能确定（通过 Deployment status）Deployment 进程是卡住的。
 
 下面的 `kubectl` 命令设置 `progressDeadlineSeconds` 使 controller 在 Deployment 在进度卡住 10 分钟后报告：
 
@@ -608,7 +608,7 @@ $ kubectl patch deployment/nginx-deployment -p '{"spec":{"progressDeadlineSecond
 - Status=False
 - Reason=ProgressDeadlineExceeded
 
-浏览 [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#typical-status-properties) 查看关于 status conditions 的更多信息。
+浏览 [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties) 查看关于 status conditions 的更多信息。
 
 **注意:** kubernetes 除了报告 `Reason=ProgressDeadlineExceeded` 状态信息外不会对卡住的 Deployment 做任何操作。更高层次的协调器可以利用它并采取相应行动，例如，回滚 Deployment 到之前的版本。
 
@@ -658,7 +658,7 @@ status:
   unavailableReplicas: 2
 ```
 
-最终，一旦超过 Deployment 进程的 deadline，kuberentes 会更新状态和导致 Progressing 状态的原因：
+最终，一旦超过 Deployment 进程的 deadline，kubernetes 会更新状态和导致 Progressing 状态的原因：
 
 ```sh
 Conditions:
@@ -708,23 +708,23 @@ $ echo $?
 
 ### Canary Deployment
 
-如果你想要使用 Deployment 对部分用户或服务器发布 release，你可以创建多个 Deployment，每个对一个 release，参照 [managing resources](https://github.com/kubernetes/kubernetes.github.io/blob/master/docs/concepts/cluster-administration/manage-deployment.md#canary-deployments) 中对 canary 模式的描述。
+如果你想要使用 Deployment 对部分用户或服务器发布 release，你可以创建多个 Deployment，每个对一个 release，参照 [managing resources](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) 中对 canary 模式的描述。
 
 ## 编写 Deployment Spec
 
-在所有的 Kubernetes 配置中，Deployment 也需要 `apiVersion`，`kind` 和 `metadata` 这些配置项。配置文件的通用使用说明查看 [部署应用](https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment/)，配置容器，和[使用 kubeclt 管理资源](https://github.com/kubernetes/kubernetes.github.io/blob/master/docs/tutorials/object-management-kubectl/object-management.md) 文档。
+在所有的 Kubernetes 配置中，Deployment 也需要 `apiVersion`，`kind` 和 `metadata` 这些配置项。配置文件的通用使用说明查看 [部署应用](https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment/)，配置容器，和[使用 kubeclt 管理资源](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/) 文档。
 
-Deployment 也需要 [`.spec` section](https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status).
+Deployment 也需要 [`.spec` section](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status).
 
 ### Pod Template
 
  `.spec.template` 是 `.spec` 中唯一要求的字段。
 
-`.spec.template` 是 [pod template](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/#pod-template). 它跟 [Pod](https://github.com/kubernetes/kubernetes.github.io/blob/master/docs/user-guide/pods) 有一模一样的 schema，除了它是嵌套的并且不需要 `apiVersion` 和 `kind` 字段。
+`.spec.template` 是 [pod template](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/#pod-template). 它跟 [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/) 有一模一样的 schema，除了它是嵌套的并且不需要 `apiVersion` 和 `kind` 字段。
 
 另外为了划分 Pod 的范围，Deployment 中的 pod template 必须指定适当的 label（不要跟其他 controller 重复了，参考 [selector](https://github.com/kubernetes/kubernetes.github.io/blob/master/docs/concepts/workloads/controllers/deployment.md#selector)）和适当的重启策略。
 
-[`.spec.template.spec.restartPolicy`](https://github.com/kubernetes/kubernetes.github.io/blob/master/docs/concepts/workloads/pods/pod-lifecycle.md) 可以设置为 `Always` , 如果不指定的话这就是默认配置。
+[`.spec.template.spec.restartPolicy`](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/) 可以设置为 `Always` , 如果不指定的话这就是默认配置。
 
 ### Replicas
 
@@ -758,13 +758,13 @@ Deployment 也需要 [`.spec` section](https://github.com/kubernetes/community/b
 
 `.spec.strategy.rollingUpdate.maxUnavailable` 是可选配置项，用来指定在升级过程中不可用 Pod 的最大数量。该值可以是一个绝对值（例如 5），也可以是期望 Pod 数量的百分比（例如 10%）。通过计算百分比的绝对值向下取整。如果 `.spec.strategy.rollingUpdate.maxSurge` 为 0 时，这个值不可以为 0。默认值是 1。
 
-例如，该值设置成 30%，启动 rolling update 后旧的 ReplicatSet 将会立即缩容到期望的 Pod 数量的 70%。新的 Pod ready 后，随着新的 ReplicaSet 的扩容，旧的 ReplicaSet 会进一步缩容，确保在升级的所有时刻可以用的 Pod 数量至少是期望 Pod 数量的 70%。
+例如，该值设置成 30%，启动 rolling update 后旧的 ReplicaSet 将会立即缩容到期望的 Pod 数量的 70%。新的 Pod ready 后，随着新的 ReplicaSet 的扩容，旧的 ReplicaSet 会进一步缩容，确保在升级的所有时刻可以用的 Pod 数量至少是期望 Pod 数量的 70%。
 
 ##### Max Surge
 
 `.spec.strategy.rollingUpdate.maxSurge` 是可选配置项，用来指定可以超过期望的 Pod 数量的最大个数。该值可以是一个绝对值（例如 5）或者是期望的 Pod 数量的百分比（例如 10%）。当 `MaxUnavailable` 为 0 时该值不可以为 0。通过百分比计算的绝对值向上取整。默认值是 1。
 
-例如，该值设置成 30%，启动 rolling update 后新的 ReplicatSet 将会立即扩容，新老 Pod 的总数不能超过期望的 Pod 数量的 130%。旧的 Pod 被杀掉后，新的 ReplicaSet 将继续扩容，旧的 ReplicaSet 会进一步缩容，确保在升级的所有时刻所有的 Pod 数量和不会超过期望 Pod 数量的 130%。
+例如，该值设置成 30%，启动 rolling update 后新的 ReplicaSet 将会立即扩容，新老 Pod 的总数不能超过期望的 Pod 数量的 130%。旧的 Pod 被杀掉后，新的 ReplicaSet 将继续扩容，旧的 ReplicaSet 会进一步缩容，确保在升级的所有时刻所有的 Pod 数量和不会超过期望 Pod 数量的 130%。
 
 ### Progress Deadline Seconds
 

@@ -45,9 +45,10 @@ spec:
 
 ## API 版本对照表
 
-| Kubernetes 版本 | Extension 版本     |
-| --------------- | ------------------ |
-| v1.5+           | extensions/v1beta1 |
+| Kubernetes 版本 | Extension 版本            |
+| --------------- | ------------------------- |
+| v1.5-v1.17      | extensions/v1beta1        |
+| v1.8+           | networking.k8s.io/v1beta1 |
 
 ## Ingress 类型
 
@@ -180,7 +181,7 @@ spec:
     servicePort: 80
 ```
 
-注意，不同 Ingress controller 支持的 TLS 功能不尽相同。 请参阅有关 [nginx](https://github.com/kubernetes/ingress/blob/master/controllers/nginx/README.md#https)，[GCE](https://github.com/kubernetes/ingress/blob/master/controllers/gce/README.md#tls) 或任何其他 Ingress controller 的文档，以了解 TLS 的支持情况。
+注意，不同 Ingress controller 支持的 TLS 功能不尽相同。 请参阅有关 [nginx](https://kubernetes.github.io/ingress-nginx/)，[GCE](https://github.com/kubernetes/ingress-gce) 或任何其他 Ingress controller 的文档，以了解 TLS 的支持情况。
 
 ## 更新 Ingress
 
